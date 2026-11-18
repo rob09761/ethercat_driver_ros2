@@ -49,7 +49,10 @@ void EcCiA402Drive::updateState()
 
 bool EcCiA402Drive::targetPositionPassthrough() const
 {
-  return mode_of_operation_display_ == ModeOfOperation::MODE_CYCLIC_SYNC_POSITION;
+  // maxon HEJ 90  JPVT (-64) position command with 0x607A like normal csp. Withoud accepting -64
+  // processData() override_command = true and command is just current position
+  return mode_of_operation_display_ == ModeOfOperation::MODE_CYCLIC_SYNC_POSITION ||
+         mode_of_operation_display_ == -64;
 }
 
 void EcCiA402Drive::processData(size_t entry_idx, uint8_t * domain_address)
@@ -94,8 +97,9 @@ void EcCiA402Drive::processData(size_t entry_idx, uint8_t * domain_address)
   }
 
   // setup mode of operation
+  //added -64 for maxon jpvt mode
   if (channel.index == CiA402D_RPDO_MODE_OF_OPERATION) {
-    if (mode_of_operation_ >= 0 && mode_of_operation_ <= 10) {
+    if ((mode_of_operation_ >= 0 && mode_of_operation_ <= 10) || mode_of_operation_ == -64) {
       channel.default_value = mode_of_operation_;
     }
   }
